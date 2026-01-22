@@ -1,8 +1,249 @@
-name: Autograding Tests
-'on':
-- workflow_dispatch
+name: GitHub Classroom Autograding
+
+on:
+  push:
+    branches:
+      - 'class03'
+
 permissions:
   checks: write
   actions: read
   contents: read
+
 jobs:
+  grading:
+    name: Autograding
+    if: github.actor != 'github-classroom[bot]' && github.run_attempt == 1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+# --------------------------------------------------------------------------
+    # Test 1: Main Branch Checks (10 Points)
+    # --------------------------------------------------------------------------
+    - name: 'Test 1: Expect Main branch to be unchanged'
+      id: test-1
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Test 1: Expect Main branch to be unchanged'
+        setup-command: 'git fetch --all' # Ensure we have origin refs
+        command: >-
+          count=$(git rev-list --count origin/main);
+          author=$(git log -1 --format='%an' origin/main);
+          if [ "$count" -eq 2 ] && [ "$author" == "github-classroom[bot]" ]; then
+            echo "✅ Main branch valid.";
+          else
+            echo "❌ Expected 2 commits by bot. Found $count commits, last by $author";
+            exit 1;
+          fi
+        timeout: 1
+        max-score: 10
+
+    # --------------------------------------------------------------------------
+    # Test 2: Branch Existence (5 Points)
+    # --------------------------------------------------------------------------
+    - name: 'Test 2: Class03 branch exists'
+      id: test-2
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Test 2: Class03 branch exists'
+        setup-command: ''
+        command: >-
+          if git show-ref --quiet refs/remotes/origin/class03; then
+            echo "✅ Branch class03 found.";
+          else
+            echo "❌ Branch class03 not found on remote.";
+            exit 1;
+          fi
+        timeout: 1
+        max-score: 5
+
+    # --------------------------------------------------------------------------
+    # Test 3: Commit 'Add index.html from class02' (10 Points)
+    # --------------------------------------------------------------------------
+    - name: 'Test 3: Commit "Add index.html from class02"'
+      id: test-3
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Test 3: Commit "Add index.html from class02"'
+        setup-command: ''
+        command: >-
+          COMMIT=$(git log origin/class03 --grep="Add index.html from class02" --format=%H -n 1);
+          if [ -z "$COMMIT" ]; then echo "❌ Commit not found"; exit 1; fi;
+          
+          AUTHOR=$(git show -s --format='%an' $COMMIT);
+          EMAIL=$(git show -s --format='%ae' $COMMIT);
+          CONTENT=$(git show $COMMIT:index.html || echo "");
+          
+          # Check H1 content
+          if [[ "$CONTENT" != *"<h1>INT142 Software Development Tools</h1>"* ]]; then echo "❌ Missing H1 tag"; exit 1; fi;
+          
+          # Check Author/Email
+          if [[ "$AUTHOR" != *"(INT142-class03-KMUTT)"* ]]; then echo "❌ Wrong Author: $AUTHOR"; exit 1; fi;
+          if [[ "$EMAIL" != *"@users.noreply.github.com"* ]]; then echo "❌ Wrong Email: $EMAIL"; exit 1; fi;
+          
+          # Compare files to Main
+          HASH_RM_MAIN=$(git rev-parse origin/main:README.md);
+          HASH_RM_CURR=$(git rev-parse $COMMIT:README.md);
+          if [ "$HASH_RM_MAIN" != "$HASH_RM_CURR" ]; then echo "❌ README modified"; exit 1; fi;
+          
+          echo "✅ Passed";
+        timeout: 1
+        max-score: 10
+
+    # --------------------------------------------------------------------------
+    # Test 4: Commit 'Update index.html to class03' (15 Points)
+    # --------------------------------------------------------------------------
+    - name: 'Test 4: Commit "Update index.html to class03"'
+      id: test-4
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Test 4: Commit "Update index.html to class03"'
+        setup-command: ''
+        command: >-
+          COMMIT=$(git log origin/class03 --grep="Update index.html to class03" --format=%H -n 1);
+          if [ -z "$COMMIT" ]; then echo "❌ Commit not found"; exit 1; fi;
+
+          CONTENT=$(git show $COMMIT:index.html || echo "");
+          AUTHOR=$(git show -s --format='%an' $COMMIT);
+          EMAIL=$(git show -s --format='%ae' $COMMIT);
+
+          if [[ "$CONTENT" != *"<h1 id=\"class\">Class 03</h1>"* ]]; then echo "❌ Missing 'Class 03' H1"; exit 1; fi;
+          if [[ "$CONTENT" != *"<h1 id=\"class\">"* ]]; then echo "❌ Missing ID tag"; exit 1; fi;
+          if [[ "$AUTHOR" != *"(INT142-class03-KMUTT)"* ]]; then echo "❌ Wrong Author"; exit 1; fi;
+          if [[ "$EMAIL" != *"@users.noreply.github.com"* ]]; then echo "❌ Wrong Email"; exit 1; fi;
+          
+          echo "✅ Passed";
+        timeout: 1
+        max-score: 15
+
+    # --------------------------------------------------------------------------
+    # Test 5: Commit 'Update index.html at home' (10 Points)
+    # --------------------------------------------------------------------------
+    - name: 'Test 5: Commit "Update index.html at home"'
+      id: test-5
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Test 5: Commit "Update index.html at home"'
+        setup-command: ''
+        command: >-
+          COMMIT=$(git log origin/class03 --grep="Update index.html at home" --format=%H -n 1);
+          if [ -z "$COMMIT" ]; then echo "❌ Commit not found"; exit 1; fi;
+
+          CONTENT=$(git show $COMMIT:index.html || echo "");
+          AUTHOR=$(git show -s --format='%an' $COMMIT);
+
+          if [[ "$CONTENT" != *"Modified at home"* ]]; then echo "❌ Missing 'Modified at home'"; exit 1; fi;
+          if [[ "$AUTHOR" != *"(INT142-class03-home)"* ]]; then echo "❌ Wrong Author"; exit 1; fi;
+          
+          HASH_RM_MAIN=$(git rev-parse origin/main:README.md);
+          HASH_RM_CURR=$(git rev-parse $COMMIT:README.md);
+          if [ "$HASH_RM_MAIN" != "$HASH_RM_CURR" ]; then echo "❌ README modified"; exit 1; fi;
+          
+          echo "✅ Passed";
+        timeout: 1
+        max-score: 10
+
+    # --------------------------------------------------------------------------
+    # Test 6: Commit 'Update index.html again at KMUTT' (10 Points)
+    # --------------------------------------------------------------------------
+    - name: 'Test 6: Commit "Update index.html again at KMUTT"'
+      id: test-6
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Test 6: Commit "Update index.html again at KMUTT"'
+        setup-command: ''
+        command: >-
+          COMMIT=$(git log origin/class03 --grep="Update index.html again at KMUTT" --format=%H -n 1);
+          if [ -z "$COMMIT" ]; then echo "❌ Commit not found"; exit 1; fi;
+
+          CONTENT=$(git show $COMMIT:index.html || echo "");
+          AUTHOR=$(git show -s --format='%an' $COMMIT);
+
+          if [[ "$CONTENT" != *"Modified at home"* ]]; then echo "❌ Missing 'Modified at home'"; exit 1; fi;
+          if [[ "$CONTENT" != *"Modified at KMUTT"* ]]; then echo "❌ Missing 'Modified at KMUTT'"; exit 1; fi;
+          if [[ "$AUTHOR" != *"(INT142-class03-KMUTT)"* ]]; then echo "❌ Wrong Author"; exit 1; fi;
+          
+          HASH_RM_MAIN=$(git rev-parse origin/main:README.md);
+          HASH_RM_CURR=$(git rev-parse $COMMIT:README.md);
+          if [ "$HASH_RM_MAIN" != "$HASH_RM_CURR" ]; then echo "❌ README modified"; exit 1; fi;
+
+          echo "✅ Passed";
+        timeout: 1
+        max-score: 10
+
+    # --------------------------------------------------------------------------
+    # Test 7: Commit 'Update index.html again at home' (10 Points)
+    # --------------------------------------------------------------------------
+    - name: 'Test 7: Commit "Update index.html again at home"'
+      id: test-7
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Test 7: Commit "Update index.html again at home"'
+        setup-command: ''
+        command: >-
+          COMMIT=$(git log origin/class03 --grep="Update index.html again at home" --format=%H -n 1);
+          if [ -z "$COMMIT" ]; then echo "❌ Commit not found"; exit 1; fi;
+
+          CONTENT=$(git show $COMMIT:index.html || echo "");
+          AUTHOR=$(git show -s --format='%an' $COMMIT);
+
+          if [[ "$CONTENT" != *"Modified at home"* ]]; then echo "❌ Missing 'Modified at home'"; exit 1; fi;
+          if [[ "$CONTENT" == *"Modified at KMUTT"* ]]; then echo "❌ Found 'Modified at KMUTT' (Should be deleted)"; exit 1; fi;
+          if [[ "$AUTHOR" != *"(INT142-class03-home)"* ]]; then echo "❌ Wrong Author"; exit 1; fi;
+
+          HASH_RM_MAIN=$(git rev-parse origin/main:README.md);
+          HASH_RM_CURR=$(git rev-parse $COMMIT:README.md);
+          if [ "$HASH_RM_MAIN" != "$HASH_RM_CURR" ]; then echo "❌ README modified"; exit 1; fi;
+
+          echo "✅ Passed";
+        timeout: 1
+        max-score: 10
+
+    # --------------------------------------------------------------------------
+    # Test 8: Merge Commit (30 Points)
+    # --------------------------------------------------------------------------
+    - name: 'Test 8: Merge commit exists and valid'
+      id: test-8
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: 'Test 8: Merge commit exists and valid'
+        setup-command: ''
+        command: >-
+          COMMIT=$(git log origin/class03 --merges -n 1 --format=%H);
+          if [ -z "$COMMIT" ]; then echo "❌ No merge commit found on class03"; exit 1; fi;
+
+          CONTENT=$(git show $COMMIT:index.html || echo "");
+          AUTHOR=$(git show -s --format='%an' $COMMIT);
+          
+          if [[ "$CONTENT" != *"Modified at home"* ]]; then echo "❌ Missing 'Modified at home'"; exit 1; fi;
+          if [[ "$CONTENT" != *"Modified at KMUTT"* ]]; then echo "❌ Missing 'Modified at KMUTT'"; exit 1; fi;
+          if [[ "$AUTHOR" != *"(INT142-class03-home)"* ]]; then echo "❌ Wrong Author: $AUTHOR"; exit 1; fi;
+
+          HASH_RM_MAIN=$(git rev-parse origin/main:README.md);
+          HASH_RM_CURR=$(git rev-parse $COMMIT:README.md);
+          if [ "$HASH_RM_MAIN" != "$HASH_RM_CURR" ]; then echo "❌ README modified"; exit 1; fi;
+
+          echo "✅ Passed";
+        timeout: 1
+        max-score: 30
+
+    # --------------------------------------------------------------------------
+    # Final Scoring Reporter
+    # --------------------------------------------------------------------------
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        TEST-1_RESULTS: "${{steps.test-1.outputs.result}}"
+        TEST-2_RESULTS: "${{steps.test-2.outputs.result}}"
+        TEST-3_RESULTS: "${{steps.test-3.outputs.result}}"
+        TEST-4_RESULTS: "${{steps.test-4.outputs.result}}"
+        TEST-5_RESULTS: "${{steps.test-5.outputs.result}}"
+        TEST-6_RESULTS: "${{steps.test-6.outputs.result}}"
+        TEST-7_RESULTS: "${{steps.test-7.outputs.result}}"
+        TEST-8_RESULTS: "${{steps.test-8.outputs.result}}"
+      with:
+        runners: test-1,test-2,test-3,test-4,test-5,test-6,test-7,test-8
