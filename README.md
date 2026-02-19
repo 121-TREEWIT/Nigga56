@@ -1,5 +1,4 @@
-# Nigga56
-# INT142 Software Development Tools
+# INT142 Software Development Tools (Prem hum lek)
 ## Class 03 Git Branches and Multiple Local Repositories
 
 ### Overview
