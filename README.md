@@ -4,10 +4,13 @@
 ###  Overview
 
 
+<img src="https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3anJ2dGs2NnoxbDU0dTN0M243OWpvb3d6OWc1cjRhNTg4bDAydHk1cCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/UiUcePrcsgS5Qp0DUj/giphy.gif">
 
 In this class, you will create a new branch `class03` and work on this branch instead of `main`. This way, if there is any issues with `class03` branch, you can delete the branch and start over again.  
 
 You will also create multiple local repositories on your computer to simulate working on multiple machines.
+
+<img src="https://mms.businesswire.com/media/20230907706258/en/1882868/22/Mentimeter_VisualAssets_Integrations_MSTeams_2023_Email_02_%281%29.jpg">
 
 ### Setup Instructions
 1. Configure default branch name to `main`
