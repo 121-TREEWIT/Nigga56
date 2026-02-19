@@ -1,7 +1,9 @@
-# INT142 Software Development Tools (UwU)
+# INT142 Software Development Tools (Git Partice)
 ## Class 03 Git Branches and Multiple Local Repositories
 
 ### Overview
+
+<img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXdqazV0OXRmbnFjMHFueDU4MGptYnpvamZra2s1MnUzYzBtcXlmcCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/TTbvuSnSHXjLVOYGX9/giphy.gif"><br>
 
 In this class, you will create a new branch `class03` and work on this branch instead of `main`. This way, if there is any issues with `class03` branch, you can delete the branch and start over again.  
 
